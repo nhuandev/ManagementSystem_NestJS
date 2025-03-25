@@ -6,6 +6,7 @@ import { User, UserSchema } from 'src/schema/user.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { Department, DepartmentSchema } from 'src/schema/department.schema';
 import { DepartmentModule } from '../department/department.moudle';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 
 @Module({
@@ -25,10 +26,14 @@ import { DepartmentModule } from '../department/department.moudle';
       },
     ]),
 
-    JwtModule.register({
-      secret: 'secret',
-      signOptions: {expiresIn: '1d'}
-  }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
+    }),
   DepartmentModule
   ],
   providers: [UsersService],

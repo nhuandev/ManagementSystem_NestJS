@@ -1,27 +1,18 @@
-import { BadRequestException, Body, Controller, Get, Post, Query, Req, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Post, Query, Req, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Department } from "src/schema/department.schema";
 import { DepartmentService } from "./department.service";
+import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
 
-
+@UseGuards(JwtAuthGuard)
 @Controller('api/depart')
 export class DepartmentController {
     constructor(
         private departService: DepartmentService,
-        private jwtService: JwtService,
     ) { }
 
     @Post('create')
     async create(@Body() createDepartDto: Department) {
-        // const checkDepart = this.departService.findOne({ name: createDepartDto.departName })
-
-        // if (checkDepart) {
-        //     return {
-        //         statusCode: 400,
-        //         message: 'Department already exists'
-        //     };
-        // }
-
         await this.departService.createDepart(createDepartDto)
         
         return {
@@ -32,7 +23,6 @@ export class DepartmentController {
 
     @Get('list')
     async list(
-        @Req() request: Request,
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 3
     ) {

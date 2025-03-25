@@ -6,6 +6,7 @@ import { Project, ProjectSchema } from 'src/schema/project.schema';
 import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
 import { UsersModule } from "../user/users.module"; 
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -24,13 +25,18 @@ import { UsersModule } from "../user/users.module";
       },
     ]),
 
-    JwtModule.register({
-      secret: 'secret',
-      signOptions: {expiresIn: '1d'}
-  }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule
   ],
   providers: [ProjectService],
   controllers: [ProjectController],
+  exports: [ProjectService] // Cần export để module khác có thể sử dụng
 })
 export class ProjectModule {}

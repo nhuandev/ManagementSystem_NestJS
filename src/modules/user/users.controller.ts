@@ -5,10 +5,12 @@ import {
   Delete,
   Get,
   HttpException,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   Res,
@@ -20,6 +22,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Response, Request } from 'express';
 import { DepartmentService } from '../department/department.service';
+import { User } from 'src/schema/user.schema';
+import { BaseResponse } from 'src/common/base-response';
 
 @Controller('api/user')
 export class UsersController {
@@ -206,14 +210,23 @@ export class UsersController {
   }
 
 
-  // @Patch(':id')
-  // async updateUser(
-  //   @Param('id') id: string,
-  //   @Body() updateUserDto: User,
-  // ) {
-  //   return this.usersService.editUser(id, updateUserDto);
-  // }
-
+  @Put('update')
+  async updateUser(@Query('id') id: string, @Body() updateUserDto: User) {
+    if (!id) {
+      throw new BadRequestException('Thiếu ID người dùng');
+    }
+    console.log(id)
+    try {
+      const updatedUser = await this.usersService.update(id, updateUserDto);
+      return new BaseResponse(200, 'Cập nhật thành công', updatedUser);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('Không tìm thấy người dùng');
+      }
+      console.error('Lỗi cập nhật người dùng:', error);
+      throw new InternalServerErrorException('Có lỗi xảy ra khi cập nhật người dùng');
+    }
+  }
 
 
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/schema/user.schema';
@@ -31,7 +31,7 @@ export class UsersService {
     return user.deleteOne();
   }
 
-  async findById(id: string) {
+  async findById(id: any) {
     try {
       // Convert string ID to MongoDB ObjectId
       if (!Types.ObjectId.isValid(id)) {
@@ -76,6 +76,31 @@ export class UsersService {
 
     return [users, total];
   }
+
+  async update(userId: string, updateData: Partial<User>): Promise<User> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('ID không hợp lệ');
+    }
+  
+    // Lọc bỏ các trường undefined/null để tránh ghi đè dữ liệu quan trọng
+    const filteredUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, v]) => v !== undefined && v !== null)
+    );
+  
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: filteredUpdateData },
+      { new: true, runValidators: true }
+    );
+  
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+  
+    return updatedUser;
+  }
+  
+
 
 
 }

@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Department, DepartmentSchema } from 'src/schema/department.schema';
 import { DepartmentService } from './department.service';
 import { DepartmentController } from './department.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -15,10 +16,14 @@ import { DepartmentController } from './department.controller';
     
     ]),
 
-    JwtModule.register({
-      secret: 'secret',
-      signOptions: {expiresIn: '1d'}
-  }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
+    }),
   ],
   providers: [DepartmentService],
   controllers: [DepartmentController],
