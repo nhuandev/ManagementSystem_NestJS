@@ -21,6 +21,7 @@ export class ProjectService {
     const total = await this.projectModel.countDocuments();
     const project = await this.projectModel
       .find()
+      .populate('managerId', 'username') 
       .skip(skip)
       .limit(limit);
 

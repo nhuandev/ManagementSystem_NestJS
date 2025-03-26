@@ -24,6 +24,8 @@ import { Response, Request } from 'express';
 import { DepartmentService } from '../department/department.service';
 import { User } from 'src/schema/user.schema';
 import { BaseResponse } from 'src/common/base-response';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { request } from 'http';
 
 @Controller('api/user')
 export class UsersController {
@@ -36,18 +38,27 @@ export class UsersController {
   // Login
   @Post('login')
   async login(
-    @Body('username') username: string,
-    @Body('password') password: string,
-    @Res({ passthrough: true }) response: Response
+    @Body() loginData: { username: string; password: string },
+    @Res({ passthrough: true }) response: Response,
   ) {
-    const user = await this.usersService.findOne({ username });
-
-    if (!user) {
-      throw new BadRequestException('Tài khoản không tồn tại');
+    const { username, password } = loginData;
+    if (!username || !password) {
+      throw new BadRequestException(
+        new BaseResponse(400, 'username and password are required'),
+      );
     }
 
-    if (!await bcrypt.compare(password, user.password)) {
-      throw new BadRequestException('Tên đăng nhập hoặc mật khẩu sai');
+    const user = await this.usersService.findOne({ username });
+    if (!user) {
+      throw new BadRequestException(
+        new BaseResponse(400, 'Account does not exist'),
+      );
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new BadRequestException(
+        new BaseResponse(400, 'Email or password incorrect'),
+      );
     }
 
     const jwt = await this.jwtService.signAsync({ id: user.id });
@@ -55,17 +66,28 @@ export class UsersController {
     response.cookie('jwt', jwt, { httpOnly: true });
 
 
-    const userData = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-    };
-    response.cookie('user', JSON.stringify(userData), { httpOnly: false }); // Cho phép frontend đọc cookie
+    return new BaseResponse(201, 'Login successfully', { token: jwt });
+  }
 
-    return {
-      message: 'success'
-    };
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Req() request: Request) {
+    const userId = (request.user as any)?.id;
+    if (!userId) {
+      throw new BadRequestException(new BaseResponse(400, 'User ID not found in token'));
+    }
+
+    const user = await this.usersService.findOne({ _id: userId });
+    if (!user) {
+      throw new BadRequestException(new BaseResponse(400, 'User not found'));
+    }
+
+    return new BaseResponse(200, 'User profile', {
+      id: user.id,
+      role: user.role,
+      username: user.username,
+    });
   }
 
   @Get('list')
@@ -77,29 +99,16 @@ export class UsersController {
     try {
       const cookie = request.cookies['jwt'];
 
-      const data = await this.jwtService.verifyAsync(cookie);
+      const data = await this.jwtService.verifyAsync(cookie); 
 
       if (!data) {
         throw new UnauthorizedException();
       }
-
+      // Lấy danh sách user kèm thông tin phòng ban
       const [users, total] = await this.usersService.getUsersWithPagination(page, limit);
 
-      const departName = await Promise.all(
-        users.map(async (user) => {
-          if (user.departmentId) {
-            const depart = await this.departService.findOne(user.departmentId);
-            return {
-              ...user.toObject(),
-              departmentId: depart ? depart.departName : "Unknown"
-            };
-          }
-          return { ...user.toObject(), departmentId: "No manager assigned" };
-        })
-      );
-
       return {
-        data: departName,
+        data: users, // users đã có departmentId (tên phòng ban) nhờ `populate()`
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
@@ -108,6 +117,7 @@ export class UsersController {
       throw new UnauthorizedException();
     }
   }
+
 
   @Post('delete')
   async deleteUser(
@@ -179,33 +189,8 @@ export class UsersController {
   @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
     response.clearCookie('jwt');
-    response.clearCookie('user');
-
     return {
       message: 'success'
-    }
-  }
-
-  @Get('edit')
-  async detailUser(@Query('id') id: string) {
-    try {
-      const user = await this.usersService.findById(id);
-      const depart = await this.departService.findOne(user.departmentId);
-
-      const userData = {
-        id: user.id,
-        username: user.username,
-        password: user.password,
-        email: user.email,
-        role: user.role,
-        departmentId: depart.departName,
-      };
-      return {
-        statusCode: 200,
-        data: userData,
-      };
-    } catch (error) {
-      throw new NotFoundException(error.message);
     }
   }
 
@@ -215,8 +200,9 @@ export class UsersController {
     if (!id) {
       throw new BadRequestException('Thiếu ID người dùng');
     }
-    console.log(id)
+    console.log("ID "+id)
     try {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 12);
       const updatedUser = await this.usersService.update(id, updateUserDto);
       return new BaseResponse(200, 'Cập nhật thành công', updatedUser);
     } catch (error) {
@@ -227,6 +213,6 @@ export class UsersController {
       throw new InternalServerErrorException('Có lỗi xảy ra khi cập nhật người dùng');
     }
   }
-
+ 
 
 }

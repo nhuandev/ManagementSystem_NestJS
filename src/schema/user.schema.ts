@@ -1,13 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { Types } from 'mongoose';
+import { Document } from "mongoose";
 
 @Schema({timestamps: true})
-export class User {
-
-  @Prop()
-  id: string;
-
+export class User extends Document {
   @Prop()
   username: string;
 

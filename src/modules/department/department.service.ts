@@ -24,8 +24,11 @@ export class DepartmentService {
     return [depart, total];
   }
 
-  async findOne(condition: any): Promise<Department> {
+  async findOne(condition: any) { 
+    return this.departModel.findOne(condition);
+  }
 
+  async findById(condition: any): Promise<Department> {
     try {
       if (!Types.ObjectId.isValid(condition)) {
         throw new NotFoundException('Invalid depart ID');
@@ -42,5 +45,10 @@ export class DepartmentService {
     } catch (error) {
       throw new NotFoundException(error.message);
     }
+  }
+
+  async delete(condition: any) {
+    const depart = await this.departModel.deleteOne(condition);
+    return depart;
   }
 }

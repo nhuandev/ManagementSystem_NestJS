@@ -3,14 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/schema/user.schema';
 
-
-
 @Injectable()
 export class UsersService {
   // [x: string]: any;
   constructor(@InjectModel(User.name) private userModel: Model<User>,) { }
 
-  async findOne(condition: any): Promise<User> {
+  async findOne(condition: any) { 
     return this.userModel.findOne(condition);
   }
 
@@ -64,18 +62,20 @@ export class UsersService {
     return updatedUser;
   }
 
-  // Phân trang
   async getUsersWithPagination(page: number, limit: number): Promise<[any[], number]> {
     const skip = (page - 1) * limit;
     const total = await this.userModel.countDocuments();
     const users = await this.userModel
       .find()
+      .populate('departmentId', 'departName') // Lấy luôn tên phòng ban
       .skip(skip)
       .limit(limit)
-      .select('-password');
-
+      .exec();
+  
+  
     return [users, total];
   }
+  
 
   async update(userId: string, updateData: Partial<User>): Promise<User> {
     if (!Types.ObjectId.isValid(userId)) {

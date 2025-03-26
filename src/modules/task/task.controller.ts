@@ -28,32 +28,12 @@ export class TaskController {
     ) {
 
         const [tasks, total] = await this.taskService.getAllTasks(page, limit);
-        try {
-            // Lấy thông tin manager cho từng project
-            const dataResponse = await Promise.all(
-                tasks.map(async (task) => {
-                    if (task.assignedTo) {
-                        const user = await this.usersService.findById(task.assignedTo); // Truy vấn user
-                        const project = await this.projectService.findById(task.projectId); // Truy vấn project
-                        return {
-                            ...task.toObject(),
-                            assignedTo: user ? user.username : "Unknown", // Gán tên user
-                            projectId: project ? project.name : "Unkown", // Gán tên dự án
-                        };
-                    }
-                    return { ...task.toObject(), assignedTo: "No user assigned",  projectId: "No project assigned"};
-                })
-            );
-
-            return {
-                data: dataResponse,
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
-                totalItems: total,
-                status: 200,
-            };
-        } catch (e) {
-            throw new UnauthorizedException();
+        return {
+            data: tasks,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalItems: total,
+            status: 200,
         }
     }
 }

@@ -18,6 +18,8 @@ export class TaskService {
         const total = await this.taskModel.countDocuments();
         const task = await this.taskModel
           .find()
+          .populate('projectId', 'name')
+          .populate('assignedTo', 'username')
           .skip(skip)
           .limit(limit);
     

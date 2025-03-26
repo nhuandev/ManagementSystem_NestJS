@@ -1,20 +1,19 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { Department, DepartmentSchema } from 'src/schema/department.schema';
 import { DepartmentService } from './department.service';
 import { DepartmentController } from './department.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { User, UserSchema } from 'src/schema/user.schema';
+import { UsersModule } from '../user/users.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      {
-        name: Department.name,
-        schema: DepartmentSchema,
-      },
-    
+      { name: Department.name, schema: DepartmentSchema },
     ]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
 
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -24,9 +23,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
+
+    forwardRef(() => UsersModule), // Dùng forwardRef để tránh vòng lặp
   ],
   providers: [DepartmentService],
   controllers: [DepartmentController],
-  exports: [DepartmentService]
+  exports: [DepartmentService],
 })
 export class DepartmentModule {}

@@ -33,22 +33,9 @@ export class ProjectController {
     try {
       const [projects, total] = await this.projectService.getAllProjects(page, limit)
 
-      // Lấy thông tin manager cho từng project
-      const projectsWithManager = await Promise.all(
-        projects.map(async (project) => {
-          if (project.managerId) {
-            const manager = await this.usersService.findById(project.managerId);
-            return {
-              ...project.toObject(),
-              managerId: manager ? manager.username : "Unknown" 
-            };
-          }
-          return { ...project.toObject(), managerId: "No manager assigned" };
-        })
-      );
-
+      
       return {
-        data: projectsWithManager,
+        data: projects,
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalItems: total,
