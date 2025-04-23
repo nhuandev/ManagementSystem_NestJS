@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString } from "class-validator";
 import { Document } from "mongoose";
 
 @Schema({ timestamps: true })
-export class Department extends Document {
+export class Department {
 
     @Prop()
     @IsString()

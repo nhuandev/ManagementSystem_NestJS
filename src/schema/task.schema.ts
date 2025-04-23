@@ -1,20 +1,26 @@
 import { Schema, Prop, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { IsNotEmpty, IsObject, IsString } from "class-validator";
 import { Types } from "mongoose";
 
-@Schema({ timestamps: true }) 
-export class Task extends Document {
+@Schema({ timestamps: true })
+export class Task {
   @Prop({ type: Types.ObjectId, required: true, ref: "Project" })
-  projectId: Types.ObjectId; 
+  @IsNotEmpty()
+  projectId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop()
+  @IsString()
+  @IsNotEmpty()
   name: string;
 
   @Prop()
+  @IsString()
+  @IsNotEmpty()
   description: string;
 
   @Prop({ type: Types.ObjectId, ref: "User" })
-  assignedTo: Types.ObjectId; 
+  @IsNotEmpty()
+  assignedTo: Types.ObjectId;
 
   @Prop({ enum: ["todo", "in_progress", "done"], default: "todo" })
   status: "todo" | "in_progress" | "done";
@@ -22,7 +28,9 @@ export class Task extends Document {
   @Prop({ enum: ["low", "medium", "high"], default: "medium" })
   priority: "low" | "medium" | "high";
 
-  @Prop()
+  @Prop() 
+  @IsString()
+  @IsNotEmpty()
   deadline: Date;
 }
 

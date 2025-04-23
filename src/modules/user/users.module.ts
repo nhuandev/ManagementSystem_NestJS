@@ -4,9 +4,9 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from 'src/schema/user.schema';
 import { JwtModule } from '@nestjs/jwt';
-import { Department, DepartmentSchema } from 'src/schema/department.schema';
-import { DepartmentModule } from '../department/department.moudle';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Project, ProjectSchema } from 'src/schema/project.schema';
+import { ProjectModule } from '../project/project.module';
 
 @Module({
   imports: [
@@ -20,8 +20,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
     MongooseModule.forFeature([
       {
-        name: Department.name,
-        schema: DepartmentSchema,
+        name: Project.name,
+        schema: ProjectSchema,
       },
     ]),
 
@@ -33,7 +33,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
-  forwardRef(() => DepartmentModule), // Dùng forwardRef để tránh vòng lặp
+  forwardRef(() => ProjectModule), // Dùng forwardRef để tránh vòng lặp
   ],
   providers: [UsersService],
   controllers: [UsersController],

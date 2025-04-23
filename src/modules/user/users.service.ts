@@ -5,7 +5,6 @@ import { User } from 'src/schema/user.schema';
 
 @Injectable()
 export class UsersService {
-  // [x: string]: any;
   constructor(@InjectModel(User.name) private userModel: Model<User>,) { }
 
   async findOne(condition: any) { 
@@ -21,12 +20,9 @@ export class UsersService {
     return newUser.save();
   }
 
-  async deleteUser(condition: any): Promise<User> {
-    const user = this.userModel.findOne(condition);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return user.deleteOne();
+  async deleteUser(condition: any) {
+    const user = await this.userModel.deleteOne(condition);
+    return user;
   }
 
   async findById(id: any) {

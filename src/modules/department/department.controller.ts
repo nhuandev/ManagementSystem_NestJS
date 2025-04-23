@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Post, Query, Req, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Post, Query, Req, UnauthorizedException, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Department } from "src/schema/department.schema";
 import { DepartmentService } from "./department.service";
@@ -15,13 +15,11 @@ export class DepartmentController {
     ) { }
 
     @Post('create')
+    @UsePipes(new ValidationPipe({ whitelist: true })) 
     async create(@Body() createDepartDto: Department) {
         await this.departService.createDepart(createDepartDto)
 
-        return {
-            statusCode: 200,
-            message: 'success'
-        }
+        return new BaseResponse(200, 'Tạo phòng ban thành công');
     }
 
     @Get('list')

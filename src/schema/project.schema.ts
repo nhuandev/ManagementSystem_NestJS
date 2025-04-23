@@ -1,9 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsArray, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true }) 
-export class Project extends Document {
+export class Project {
+  toObject(): any {
+    throw new Error("Method not implemented.");
+  }
   @Prop({ required: true })
   @IsString()
   @IsNotEmpty()
@@ -14,7 +17,7 @@ export class Project extends Document {
   @IsString()
   description?: string;
 
-  @Prop({ required: true })
+  @Prop()
   @IsNotEmpty()
   startDate: string;
 
@@ -29,14 +32,14 @@ export class Project extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   @IsString()
   @IsNotEmpty()
-  managerId: string;
-
-  // Lưu ID 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  managerId: Types.ObjectId;
+ 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], required: true})
   @IsOptional()
   @IsArray()
-  teamMembers?: string[];
+  teamMembers?: Types.ObjectId[];
 }
 
+export type ProjectDocument = Project & Document;
 export const ProjectSchema = SchemaFactory.createForClass(Project);
 

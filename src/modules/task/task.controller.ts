@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UnauthorizedException, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
 import { TaskService } from "./task.service";
 import { Task } from "src/schema/task.schema";
@@ -11,12 +11,12 @@ import { ProjectService } from "../project/project.service";
 export class TaskController {
     constructor(
         private taskService: TaskService,
-        private usersService: UsersService,
-        private projectService: ProjectService
     ) { }
 
     @Post('/create')
+    @UsePipes(new ValidationPipe({ whitelist: true })) 
     async createTask(@Body() taskData: Task) {
+        console.log("data "+taskData);
         await this.taskService.createTask(taskData);
         return new BaseResponse(200, 'Tạo nhiệm vụ thành công');
     }
@@ -26,7 +26,7 @@ export class TaskController {
         @Query('page') page: number = 1,
         @Query('limit') limit: number = 3
     ) {
-
+ 
         const [tasks, total] = await this.taskService.getAllTasks(page, limit);
         return {
             data: tasks,

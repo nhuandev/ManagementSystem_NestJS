@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schema/user.schema';
 import { JwtModule } from '@nestjs/jwt';
@@ -33,7 +33,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       }),
       inject: [ConfigService],
     }),
-    UsersModule
+     forwardRef(() => UsersModule), // Dùng forwardRef để tránh vòng lặp
   ],
   providers: [ProjectService],
   controllers: [ProjectController],
